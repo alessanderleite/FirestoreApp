@@ -33,6 +33,12 @@
         android:layout_height="wrap_content"
         android:onClick="loadNote"
         android:text="Load" />
+    
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Update description"
+        android:onClick="updateDescription"/>
 
     <TextView
         android:id="@+id/text_view_date"
