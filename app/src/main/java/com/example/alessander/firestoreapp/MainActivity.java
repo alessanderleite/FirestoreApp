@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText editTextTitle;
     private EditText editTextDescription;
+    private EditText editTextPriority;
     private TextView textViewData;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         editTextTitle = findViewById(R.id.edit_text_title);
         editTextDescription = findViewById(R.id.edit_text_description);
+        editTextPriority = findViewById(R.id.edit_text_priority);
         textViewData = findViewById(R.id.text_view_date);
     }
 
@@ -60,9 +62,11 @@ public class MainActivity extends AppCompatActivity {
                     String documentId = note.getDocumentId();
                     String title = note.getTitle();
                     String description = note.getDescription();
+                    int priority = note.getPriority();
 
                     data += "ID: " + documentId
-                            + "\nTitle: " + title + "\nDescription: " + description + "\n\n";
+                            + "\nTitle: " + title + "\nDescription: " + description
+                            + "\nPriority: " + priority + "\n\n";
                 }
 
                 textViewData.setText(data);
@@ -75,7 +79,13 @@ public class MainActivity extends AppCompatActivity {
         String title = editTextTitle.getText().toString();
         String description = editTextDescription.getText().toString();
 
-        Note note = new Note(title, description);
+        if (editTextPriority.length() == 0) {
+            editTextPriority.setText("0");
+        }
+
+        int priority = Integer.parseInt(editTextPriority.getText().toString());
+
+        Note note = new Note(title, description, priority);
 
         notebookRef.add(note);
     }
@@ -94,9 +104,11 @@ public class MainActivity extends AppCompatActivity {
                             String documentId = note.getDocumentId();
                             String title = note.getTitle();
                             String description = note.getDescription();
+                            int priority = note.getPriority();
 
                             data += "ID: " + documentId
-                                    + "\nTitle: " + title + "\nDescription: " + description + "\n\n";
+                                    + "\nTitle: " + title + "\nDescription: " + description
+                                    + "\nPriority: " + priority + "\n\n";
                         }
 
                         textViewData.setText(data);
