@@ -11,7 +11,9 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private CollectionReference notebookRef = db.collection("Notebook");
+
+    private DocumentSnapshot lastResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,29 +57,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadNotes(View v) {
-        notebookRef.orderBy("priority")
-                .startAt(3)
-                .get()
+        Query query;
+        if (lastResult == null) {
+            query = notebookRef.orderBy("priority")
+                    .limit(3);
+        } else {
+            query = notebookRef.orderBy("priority")
+                    .startAfter(lastResult)
+                    .limit(3);
+        }
+
+        query.get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                         String data ="";
+                        String data = "";
 
-                         for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                             Note note = documentSnapshot.toObject(Note.class);
-                             note.setDocumentId(documentSnapshot.getId());
+                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                            Note note = documentSnapshot.toObject(Note.class);
+                            note.setDocumentId(documentSnapshot.getId());
 
-                             String documentId = note.getDocumentId();
-                             String title = note.getTitle();
-                             String description = note.getDescription();
-                             int priority = note.getPriority();
+                            String documentId = note.getDocumentId();
+                            String title = note.getTitle();
+                            String description = note.getDescription();
+                            int priority = note.getPriority();
 
-                             data += "ID: " + documentId
-                                     + "\nTitle: " + title + "\nDescription " + description
-                                     + "\nPriority: " + priority + "\n\n";
-                         }
+                            data += "ID: " + documentId
+                                    + "\nTitle: " + title + "\nDescription " + description
+                                    + "\nPriority: " + priority + "\n\n";
+                        }
+                        if (queryDocumentSnapshots.size() > 0) {
+                            data += "_____________\n\n";
+                            textViewData.append(data);
 
-                         textViewData.setText(data);
+                            lastResult = queryDocumentSnapshots.getDocuments()
+                                    .get(queryDocumentSnapshots.size() - 1);
+                        }
                     }
                 });
     }
