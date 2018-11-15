@@ -7,11 +7,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
@@ -22,9 +21,8 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.Transaction;
 import com.google.firebase.firestore.WriteBatch;
-
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -49,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         editTextPriority = findViewById(R.id.edit_text_priority);
         textViewData = findViewById(R.id.text_view_data);
 
-        executeBatchedWrite();
+        executeTransaction();
     }
 
     @Override
@@ -144,24 +142,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void executeBatchedWrite() {
-        WriteBatch batch = db.batch();
-        DocumentReference doc1 = notebookRef.document("New Note");
-        batch.set(doc1, new Note("New Note", "New Note", 1));
-
-        DocumentReference doc2 = notebookRef.document("gHj8iQZ4WWbcg7pjyXTi");
-        batch.update(doc2, "title", "Updated Note");
-
-        DocumentReference doc3 = notebookRef.document("h9aynhgi1FOBdLMH8ANz");
-        batch.delete(doc3);
-
-        DocumentReference doc4 = notebookRef.document();
-        batch.set(doc4, new Note("Added Note", "Added Note", 1));
-
-        batch.commit().addOnFailureListener(new OnFailureListener() {
+    private void executeTransaction() {
+        db.runTransaction(new Transaction.Function<Long>() {
             @Override
-            public void onFailure(@NonNull Exception e) {
-                textViewData.setText(e.toString());
+            public Long apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                DocumentReference exampleNoteRef = notebookRef.document("Example Note");
+                DocumentSnapshot exampleNoteSnapshot = transaction.get(exampleNoteRef);
+                long newPriority = exampleNoteSnapshot.getLong("priority") + 1;
+                transaction.update(exampleNoteRef, "priority", newPriority);
+                return newPriority;
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Long>() {
+            @Override
+            public void onSuccess(Long result) {
+                Toast.makeText(MainActivity.this, "New Priority: " + result, + Toast.LENGTH_SHORT).show();
             }
         });
     }
