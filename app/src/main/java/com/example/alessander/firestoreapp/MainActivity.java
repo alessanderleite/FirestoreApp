@@ -18,9 +18,8 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -46,8 +45,6 @@ public class MainActivity extends AppCompatActivity {
         editTextPriority = findViewById(R.id.edit_text_priority);
         editTextTags = findViewById(R.id.edit_text_tags);
         textViewData = findViewById(R.id.text_view_data);
-
-        updateArray();
     }
 
     @Override
@@ -97,15 +94,22 @@ public class MainActivity extends AppCompatActivity {
 
         String tagInput = editTextTags.getText().toString();
         String[] tagArray = tagInput.split("\\s*,\\s*");
-        List<String> tags = Arrays.asList(tagArray);
+        Map<String, Boolean> tags = new HashMap<>();
+
+        for (String tag : tagArray) {
+            tags.put(tag, true);
+        }
 
         Note note = new Note(title, description, priority, tags);
 
-        notebookRef.add(note);
+        notebookRef.document("0tgKALjSXavVzfsnl9TN")
+                .collection("Child Notes").add(note);
+
     }
 
     public void loadNotes(View v) {
-        notebookRef.whereArrayContains("tags", "tag5").get()
+        notebookRef.document("0tgKALjSXavVzfsnl9TN")
+                .collection("Child Notes").get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
@@ -119,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
 
                             data += "ID: " + documentId;
 
-                            for (String tag : note.getTags()) {
+                            for (String tag : note.getTags().keySet()) {
                                 data += "\n-" + tag;
                             }
 
@@ -129,11 +133,4 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
-    private void updateArray() {
-        notebookRef.document("jLk0bSMX3srZ0pF59HXZ")
-//                .update("tags", FieldValue.arrayUnion("new tag"));
-        .update("tags", FieldValue.arrayRemove("new tag"));
-    }
-
 }
